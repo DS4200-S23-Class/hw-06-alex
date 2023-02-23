@@ -6,23 +6,28 @@ h1 {
 	text-align: center;
 }
 
-.left {
-	width: 33%;
-}
-
-.middle {
-	width: 33%;
-}
-
-.right {
-	width: 33%;
+h2 {
+	text-align: center;
 }
 
 .column {
+    width: 30%;
     float: left;
+    box-sizing: border-box;
+    padding: 10px;
 }
 
 .flex{
     display: flex;
     flex-direction: row;
 }
+
+.acknowledgements {
+	text-align: center;
+	font-size: 26px;
+}
+
+#centered {
+	text-align: center;
+}
+
