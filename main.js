@@ -53,10 +53,8 @@ d3.csv("/data/iris.csv").then((data) => {
 
 	const colorScale = d3.scaleOrdinal()
 						.domain(data.map(d => d.Species))
-						.range(["green", "orange", "blue"]);
+						.range(["red", "orange", "blue"]);
 
-	// getting color by species
-	const color = "green"
 
 	// plotting the circles onto the viz
 
@@ -148,8 +146,8 @@ plot_scatters();
 
 function plot_bar() {
 const data = [
-  {species: "setosa", count: 50},
-  {species: "versicolor", count: 50},
+  {species: "setosa", count: 75},
+  {species: "versicolor", count: 75},
   {species: "virginica", count: 50},
 ];
 
@@ -164,7 +162,7 @@ const Y_SCALE = d3.scaleLinear()
 
 const colorScale = d3.scaleOrdinal()
   .domain(data.map(d => d.species))
-  .range(["green", "orange", "blue"]);
+  .range(["aquamarine", "orange", "red"]);
 
 const FRAME = d3.select("#vis3")
   .append("svg")
