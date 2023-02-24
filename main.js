@@ -2,7 +2,7 @@ console.log("linked!")
 
 const FRAME_HEIGHT = 600;
 const FRAME_WIDTH = 600; 
-const MARGINS = {left: 50, right: 50, top: 50, bottom: 50};
+const MARGINS = {left: 100, right: 100, top: 50, bottom: 50};
 
 // create dimensions for visualization sizes
 const VIS_HEIGHT = FRAME_HEIGHT - MARGINS.top - MARGINS.bottom;
@@ -53,7 +53,7 @@ d3.csv("/data/iris.csv").then((data) => {
 
 	const colorScale = d3.scaleOrdinal()
 						.domain(data.map(d => d.Species))
-						.range(["red", "orange", "blue"]);
+						.range(["aquamarine", "lightsalmon", "lightsteelblue"]);
 
 
 	// plotting the circles onto the viz
@@ -71,10 +71,10 @@ d3.csv("/data/iris.csv").then((data) => {
 
 	//adding a title
 	FRAME1.append("text")
-			.attr("x", (VIS_WIDTH / 2))
+			.attr("x", (VIS_WIDTH / 2 + MARGINS.left))
 			.attr("y", (MARGINS.top / 2))
 			.attr("text-anchor", "middle")
-			.style("font-size", "16px")
+			.style("font-size", "20px")
 			.style("font-weight", "bold")
 			.text("Petal_Length vs. Sepal_Length");
 
@@ -117,10 +117,10 @@ d3.csv("/data/iris.csv").then((data) => {
 
 	//adding a title
 	FRAME2.append("text")
-			.attr("x", (VIS_WIDTH / 2))
+			.attr("x", (VIS_WIDTH / 2 + MARGINS.left))
 			.attr("y", (MARGINS.top / 2))
 			.attr("text-anchor", "middle")
-			.style("font-size", "16px")
+			.style("font-size", "20px")
 			.style("font-weight", "bold")
 			.text("Petal_Width vs. Sepal_Width");
 
@@ -146,9 +146,9 @@ plot_scatters();
 
 function plot_bar() {
 const data = [
-  {species: "setosa", count: 75},
-  {species: "versicolor", count: 75},
   {species: "virginica", count: 50},
+  {species: "versicolor", count: 50},
+  {species: "setosa", count: 50},
 ];
 
 const X_SCALE = d3.scaleBand()
@@ -162,13 +162,8 @@ const Y_SCALE = d3.scaleLinear()
 
 const colorScale = d3.scaleOrdinal()
   .domain(data.map(d => d.species))
-  .range(["aquamarine", "orange", "red"]);
+  .range(["lightsteelblue", "lightsalmon", "aquamarine"]);
 
-const FRAME = d3.select("#vis3")
-  .append("svg")
-  .attr("height", FRAME_HEIGHT)
-  .attr("width", FRAME_WIDTH)
-  .attr("class", "frame");
 
 const bars = FRAME3.selectAll("rect")
   .data(data)
@@ -178,6 +173,7 @@ const bars = FRAME3.selectAll("rect")
   .attr("y", d => Y_SCALE(d.count) + MARGINS.top)
   .attr("width", X_SCALE.bandwidth())
   .attr("height", d => VIS_HEIGHT - Y_SCALE(d.count))
+  .attr("fill-opacity", "50%")
   .attr("fill", d => colorScale(d.species));
 
 const xAxis = d3.axisBottom(X_SCALE);
@@ -201,7 +197,7 @@ FRAME3.append("text")
   .attr("x", VIS_WIDTH / 2 + MARGINS.left)
   .attr("y", MARGINS.top / 2)
   .attr("text-anchor", "middle")
-  .style("font-size", "16px")
+  .style("font-size", "20px")
   .style("font-weight", "bold")
   .text("Counts of Species");
 
