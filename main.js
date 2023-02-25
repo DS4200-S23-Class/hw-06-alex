@@ -8,9 +8,6 @@ const MARGINS = {left: 100, right: 100, top: 50, bottom: 50};
 const VIS_HEIGHT = FRAME_HEIGHT - MARGINS.top - MARGINS.bottom;
 const VIS_WIDTH = FRAME_WIDTH - MARGINS.left -MARGINS.right;
 
-//data for bar chart
-
-
 
 const FRAME1 = d3.select("#vis1")
 					.append("svg")
@@ -30,7 +27,6 @@ const FRAME3 = d3.select("#vis3")
 						.attr("width", FRAME_WIDTH)
 						.attr("class", "frame");
 
-function plot_scatters() {
 d3.csv("/data/iris.csv").then((data) => {
 	console.log(data);
 
@@ -55,6 +51,10 @@ d3.csv("/data/iris.csv").then((data) => {
 						.domain(data.map(d => d.Species))
 						.range(["aquamarine", "lightsalmon", "lightsteelblue"]);
 
+	const brush = d3.brush()
+  .extent([[MARGINS.left, MARGINS.top], [MARGINS.left + VIS_WIDTH, MARGINS.top + VIS_HEIGHT]])
+  .on("brush end", brushed);
+
 
 	// plotting the circles onto the viz
 
@@ -66,7 +66,7 @@ d3.csv("/data/iris.csv").then((data) => {
 				.attr("cy", (d) => {return Y_SCALE(d.Petal_Length) + MARGINS.top})
 				.attr("r", 5)
 				.attr("class", "point")
-				.attr("fill-opacity", "50%")
+				.attr("fill-opacity", 0.5)
 				.attr("fill", d => colorScale(d.Species));
 
 	//adding a title
@@ -112,7 +112,7 @@ d3.csv("/data/iris.csv").then((data) => {
 				.attr("cy", (d) => {return Y_SCALE2(d.Petal_Width) + MARGINS.top})
 				.attr("r", 5)
 				.attr("class", "point")
-				.attr("fill-opacity", "50%")
+				.attr("fill-opacity", 0.5)
 				.attr("fill", d => colorScale(d.Species));
 
 	//adding a title
@@ -138,13 +138,66 @@ d3.csv("/data/iris.csv").then((data) => {
 			.attr("font-size", "14px")
 			.attr("font-family", "Arial");
 
+	FRAME2.append("g")
+  .attr("class", "brush")
+  .call(brush);
+
+
+
+	const X_SCALE3 = d3.scaleLinear();
+	const Y_SCALE3 = d3.scaleLinear();
+	let selectedPoints;
+
+	function brushed(event) {
+  if (event.selection) {
+    // Get the brush selection coordinates
+    const [[x0, y0], [x1, y1]] = event.selection;
+    
+    // Get the selected points from the second scatter plot
+    const correspondingPoints1 = FRAME2.selectAll("circle")
+      .filter(d => {
+        const x = X_SCALE2(d.Sepal_Width) + MARGINS.left;
+        const y = Y_SCALE2(d.Petal_Width) + MARGINS.top;
+        return x0 <= x && x <= x1 && y0 <= y && y <= y1;
+      });
+    
+    // Get the corresponding points from the first scatter plot
+     const correspondingPoints2 = FRAME1.selectAll("circle")
+      .filter(d => {
+        const x = X_SCALE(d.Sepal_Length) + MARGINS.left;
+        const y = Y_SCALE(d.Petal_Length) + MARGINS.top;
+        return x0 <= x && x <= x1 && y0 <= y && y <= y1;
+      });
+      
+    // Combine the selected points from both scatter plots
+    const selectedPoints = correspondingPoints1.merge(correspondingPoints2);
+    const selectedPoints2 = correspondingPoints2.merge(correspondingPoints1);
+
+
+    // Highlight the selected points
+    selectedPoints.attr("fill-opacity", 0.8).attr("stroke", "orange").attr("stroke-width", 2);
+    selectedPoints2.attr("fill-opacity", 0.8).attr("stroke", "orange").attr("stroke-width", 2);
+    
+    // Get the corresponding bars from the bar chart
+    const correspondingBars = FRAME3.selectAll("rect")
+  		.filter(d => selectedPoints.filter(p => p.Species === d.species).size() > 0);
+      
+    // Highlight the corresponding bars
+    correspondingBars.attr("fill-opacity", 1).attr("stroke", "orange").attr("stroke-width", 2);
+  } else {
+    // Remove the highlighting when the brush is cleared
+    FRAME1.selectAll("circle").attr("fill-opacity", 0.5).attr("stroke", "none");
+    FRAME2.selectAll("circle").attr("fill-opacity", 0.5).attr("stroke", "none");
+    FRAME3.selectAll("rect").attr("fill-opacity", 0.5).attr("stroke", "none");
+  }
+}
 	
 	});
-};
 
-plot_scatters();
 
-function plot_bar() {
+
+
+
 const data = [
   {species: "virginica", count: 50},
   {species: "versicolor", count: 50},
@@ -173,7 +226,7 @@ const bars = FRAME3.selectAll("rect")
   .attr("y", d => Y_SCALE(d.count) + MARGINS.top)
   .attr("width", X_SCALE.bandwidth())
   .attr("height", d => VIS_HEIGHT - Y_SCALE(d.count))
-  .attr("fill-opacity", "50%")
+  .attr("fill-opacity", 0.5)
   .attr("fill", d => colorScale(d.species));
 
 const xAxis = d3.axisBottom(X_SCALE);
@@ -203,8 +256,7 @@ FRAME3.append("text")
 
 
 
-};
 
-plot_bar();
+
 
 
