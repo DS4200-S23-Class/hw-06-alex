@@ -27,7 +27,7 @@ const FRAME3 = d3.select("#vis3")
 						.attr("width", FRAME_WIDTH)
 						.attr("class", "frame");
 
-d3.csv("/data/iris.csv").then((data) => {
+d3.csv("data/iris.csv").then((data) => {
 	console.log(data);
 
 	const max_sepal_length = d3.max(data, (d) => {return parseFloat(d.Sepal_Length)});
