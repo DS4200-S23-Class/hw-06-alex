@@ -149,43 +149,39 @@ d3.csv("data/iris.csv").then((data) => {
 	let selectedPoints;
 
 	function brushed(event) {
-  if (event.selection) {
-    // Get the brush selection coordinates
-    const [[x0, y0], [x1, y1]] = event.selection;
-    
-    // Get the selected points from the second scatter plot
-    const selectedPoints2 = FRAME2.selectAll(".point")
-      .filter(d => {
-        const x = X_SCALE2(d.Sepal_Width) + MARGINS.left;
-        const y = Y_SCALE2(d.Petal_Width) + MARGINS.top;
-        return x >= x0 && x <= x1 && y >= y0 && y <= y1;
-      });
-    
-    // Get the corresponding data points from the first scatter plot
-    const correspondingPoints1 = FRAME1.selectAll(".point")
-      .filter(d => {
-        const x = X_SCALE(d.Sepal_Length) + MARGINS.left;
-        const y = Y_SCALE(d.Petal_Length) + MARGINS.top;
-        return selectedPoints2.data().some(p => p.Sepal_Width === d.Sepal_Length && p.Petal_Width === d.Petal_Length);
-      });
-      
-    // Get the corresponding bars from the bar chart
-    const correspondingBars = FRAME3.selectAll("rect")
-  		.filter(d => selectedPoints2.filter(p => p.Species === d.species).size() > 0);
-      
-    // Highlight the selected and corresponding points
-    selectedPoints2.attr("stroke", "orange").attr("stroke-width", 2);
-    correspondingPoints1.attr("fill-opacity", 0.8).attr("stroke", "orange").attr("stroke-width", 2);
-    
-    // Highlight the corresponding bars
-    correspondingBars.attr("stroke", "orange").attr("stroke-width", 2);
-  } else {
-    // Remove the highlighting when the brush is cleared
-    FRAME1.selectAll(".point").attr("fill-opacity", 0.5).attr("stroke", "none");
-    FRAME2.selectAll(".point").attr("stroke", "none");
-    FRAME3.selectAll("rect").attr("stroke", "none");
-  }
-};
+	  if (event.selection) {
+	    // Get the brush selection coordinates
+	    const [[x0, y0], [x1, y1]] = event.selection;
+	    
+	    // Get the selected point from the second scatter plot
+	    const selectedPoint2 = FRAME2.selectAll("circle")
+	      .filter(d => {
+	        const x = X_SCALE2(d.Sepal_Width) + MARGINS.left;
+	        const y = Y_SCALE2(d.Petal_Width) + MARGINS.top;
+	        return x >= x0 && x <= x1 && y >= y0 && y <= y1;
+	      });
+	      
+	    // Get the corresponding point from the first scatter plot
+	    const correspondingPoint1 = FRAME1.selectAll("circle")
+	      .filter(d => d.Sepal_Width == selectedPoint2.data()[0].Sepal_Width && d.Petal_Width == selectedPoint2.data()[0].Petal_Width);
+	    
+	    // Highlight the selected and corresponding points
+	    selectedPoints.attr("stroke", "orange").attr("stroke-width", 2);
+	    correspondingPoint1.attr("fill-opacity", 0.8).attr("stroke", "orange").attr("stroke-width", 2);
+	    
+	    // Get the corresponding bars from the bar chart
+	    const correspondingBars = FRAME3.selectAll("rect")
+	      .filter(d => selectedPoints.filter(p => p.Species === d.species).size() > 0);
+	      
+	    // Highlight the corresponding bars
+	    correspondingBars.attr("stroke", "orange").attr("stroke-width", 2);
+	  } else {
+	    // Remove the highlighting when the brush is cleared
+	    FRAME1.selectAll("circle").attr("fill-opacity", 0.5).attr("stroke", "none");
+	    FRAME2.selectAll("circle").attr("stroke", "none");
+	    FRAME3.selectAll("rect").attr("stroke", "none");
+  	}
+	};
 
 
 
