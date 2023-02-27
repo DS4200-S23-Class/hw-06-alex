@@ -187,14 +187,14 @@ d3.csv("data/iris.csv").then((data) => {
 
 
 
-const data = [
+const bar_data = [
   {species: "virginica", count: 50},
   {species: "versicolor", count: 50},
   {species: "setosa", count: 50},
 ];
 
 const X_SCALE = d3.scaleBand()
-  .domain(data.map(d => d.species))
+  .domain(bar_data.map(d => d.species))
   .range([0, VIS_WIDTH])
   .padding(0.2);
 
@@ -203,12 +203,12 @@ const Y_SCALE = d3.scaleLinear()
   .range([VIS_HEIGHT, 0]);
 
 const colorScale = d3.scaleOrdinal()
-  .domain(data.map(d => d.species))
+  .domain(bar_data.map(d => d.species))
   .range(["lightsteelblue", "lightsalmon", "aquamarine"]);
 
 
 const bars = FRAME3.selectAll("rect")
-  .data(data)
+  .data(bar_data)
   .enter()
   .append("rect")
   .attr("x", d => X_SCALE(d.species) + MARGINS.left)
