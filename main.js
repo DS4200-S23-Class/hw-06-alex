@@ -154,45 +154,38 @@ d3.csv("data/iris.csv").then((data) => {
     const [[x0, y0], [x1, y1]] = event.selection;
     
     // Get the selected points from the second scatter plot
-    const correspondingPoints1 = FRAME2.selectAll("circle")
+    const selectedPoints2 = FRAME2.selectAll(".point")
       .filter(d => {
         const x = X_SCALE2(d.Sepal_Width) + MARGINS.left;
         const y = Y_SCALE2(d.Petal_Width) + MARGINS.top;
-        return x0 <= x && x <= x1 && y0 <= y && y <= y1;
+        return x >= x0 && x <= x1 && y >= y0 && y <= y1;
       });
     
-    // Get the corresponding points from the first scatter plot
-     const correspondingPoints2 = FRAME1.selectAll("circle")
+    // Get the corresponding data points from the first scatter plot
+    const correspondingPoints1 = FRAME1.selectAll(".point")
       .filter(d => {
         const x = X_SCALE(d.Sepal_Length) + MARGINS.left;
         const y = Y_SCALE(d.Petal_Length) + MARGINS.top;
-        return x0 <= x && x <= x1 && y0 <= y && y <= y1;
+        return selectedPoints2.data().some(p => p.Sepal_Width === d.Sepal_Length && p.Petal_Width === d.Petal_Length);
       });
       
-    // Combine the selected points from both scatter plots
-    const selectedPoints = correspondingPoints1.merge(correspondingPoints2);
-    const selectedPoints2 = correspondingPoints2.merge(correspondingPoints1);
-
-
-    // Highlight the selected points
-    selectedPoints.attr("fill-opacity", 0.8).attr("stroke", "orange").attr("stroke-width", 2);
-    selectedPoints2.attr("fill-opacity", 0.8).attr("stroke", "orange").attr("stroke-width", 2);
-    
     // Get the corresponding bars from the bar chart
     const correspondingBars = FRAME3.selectAll("rect")
-  		.filter(d => selectedPoints.filter(p => p.Species === d.species).size() > 0);
+  		.filter(d => selectedPoints2.filter(p => p.Species === d.species).size() > 0);
       
+    // Highlight the selected and corresponding points
+    selectedPoints2.attr("stroke", "orange").attr("stroke-width", 2);
+    correspondingPoints1.attr("fill-opacity", 0.8).attr("stroke", "orange").attr("stroke-width", 2);
+    
     // Highlight the corresponding bars
-    correspondingBars.attr("fill-opacity", 1).attr("stroke", "orange").attr("stroke-width", 2);
+    correspondingBars.attr("stroke", "orange").attr("stroke-width", 2);
   } else {
     // Remove the highlighting when the brush is cleared
-    FRAME1.selectAll("circle").attr("fill-opacity", 0.5).attr("stroke", "none");
-    FRAME2.selectAll("circle").attr("fill-opacity", 0.5).attr("stroke", "none");
-    FRAME3.selectAll("rect").attr("fill-opacity", 0.5).attr("stroke", "none");
+    FRAME1.selectAll(".point").attr("fill-opacity", 0.5).attr("stroke", "none");
+    FRAME2.selectAll(".point").attr("stroke", "none");
+    FRAME3.selectAll("rect").attr("stroke", "none");
   }
-}
-	
-	});
+};
 
 
 
