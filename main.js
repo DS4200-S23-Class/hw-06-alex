@@ -193,34 +193,30 @@ const bar_data = [
   {species: "setosa", count: 50},
 ];
 
-const X_SCALE = d3.scaleBand()
+const X_SCALE_BAR = d3.scaleBand()
   .domain(bar_data.map(d => d.species))
   .range([0, VIS_WIDTH])
   .padding(0.2);
 
-const Y_SCALE = d3.scaleLinear()
-  .domain([0, d3.max(data, d => d.count) + 10])
+const Y_SCALE_BAR = d3.scaleLinear()
+  .domain([0, d3.max(bar_data, d => d.count) + 10])
   .range([VIS_HEIGHT, 0]);
-
-const colorScale = d3.scaleOrdinal()
-  .domain(bar_data.map(d => d.species))
-  .range(["lightsteelblue", "lightsalmon", "aquamarine"]);
 
 
 const bars = FRAME3.selectAll("rect")
   .data(bar_data)
   .enter()
   .append("rect")
-  .attr("x", d => X_SCALE(d.species) + MARGINS.left)
-  .attr("y", d => Y_SCALE(d.count) + MARGINS.top)
-  .attr("width", X_SCALE.bandwidth())
-  .attr("height", d => VIS_HEIGHT - Y_SCALE(d.count))
+  .attr("x", d => X_SCALE_BAR(d.species) + MARGINS.left)
+  .attr("y", d => Y_SCALE_BAR(d.count) + MARGINS.top)
+  .attr("width", X_SCALE_BAR.bandwidth())
+  .attr("height", d => VIS_HEIGHT - Y_SCALE_BAR(d.count))
   .attr("fill-opacity", 0.5)
   .attr("fill", d => colorScale(d.species));
 
-const xAxis = d3.axisBottom(X_SCALE);
+const xAxis = d3.axisBottom(X_SCALE_BAR);
 
-const yAxis = d3.axisLeft(Y_SCALE);
+const yAxis = d3.axisLeft(Y_SCALE_BAR);
 
 FRAME3.append("g")
 			.attr("transform", "translate(" + MARGINS.left + "," + (VIS_HEIGHT + MARGINS.top) + ")")
@@ -242,10 +238,3 @@ FRAME3.append("text")
   .style("font-size", "20px")
   .style("font-weight", "bold")
   .text("Counts of Species");
-
-
-
-
-
-
-
