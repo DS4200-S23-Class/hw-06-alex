@@ -33,7 +33,7 @@ h2 {
 
 
 .selected {
-    stroke: orange;
-    stroke-width: 3px;
-    opacity: 1;
-  }
+  opacity: 1 !important;
+  stroke: orange;
+  stroke-width: 1px;
+}

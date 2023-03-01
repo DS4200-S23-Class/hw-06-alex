@@ -19,7 +19,8 @@ const FRAME2 = d3.select("#vis2")
 					.append("svg")
 						.attr("height", FRAME_HEIGHT)
 						.attr("width", FRAME_WIDTH)
-						.attr("class", "frame");
+						.attr("class", "frame")
+						.lower();
 
 const FRAME3 = d3.select("#vis3")
 					.append("svg")
@@ -67,7 +68,8 @@ d3.csv("data/iris.csv").then((data) => {
 				.attr("r", 5)
 				.attr("class", "point")
 				.attr("fill-opacity", 0.5)
-				.attr("fill", d => colorScale(d.Species));
+				.attr("fill", d => colorScale(d.Species))
+				.attr("id", (d) => `length-${d.id}`);
 
 	//adding a title
 	FRAME1.append("text")
@@ -104,7 +106,7 @@ d3.csv("data/iris.csv").then((data) => {
 						.range([VIS_HEIGHT, 0]);
 
 
-	FRAME2.selectAll("circle")
+	const circles = FRAME2.selectAll("circle")
 			.data(data)
 			.enter()
 			.append("circle")
@@ -138,59 +140,56 @@ d3.csv("data/iris.csv").then((data) => {
 			.attr("font-size", "14px")
 			.attr("font-family", "Arial");
 
-	FRAME2.append("g")
-  .attr("class", "brush")
-  .call(brush);
+	FRAME2.select("text")
+  .attr("fill", "black");
+
+	FRAME2.call(d3.brush() // Add the brush feature using the d3.brush function
+      					.extent([[MARGINS.left, MARGINS.top],
+        									[FRAME_WIDTH - MARGINS.left, FRAME_HEIGHT - MARGINS.top],]) // initialise the brush area: start at 0,0 and finishes at width,height: it means I select the whole graph area
+      					.on("start brush", updateChart));
 
 
+	let extent = undefined;
+  function updateChart(event) {
+    extent = event.selection;
+    let highlightSpecies = {
+      setosa: false,
+      versicolor: false,
+      virginica: false,
+    };
+    circles.classed("selected", function (d) {
+      const brushed = isBrushed(
+        extent,
+        X_SCALE2(d["Sepal_Width"]) + MARGINS.left,
+        Y_SCALE2(d["Petal_Width"]) + MARGINS.top
+      );
+      d3.select(`#length-${d.id}`).attr("class", brushed ? "selected" : null);
+      highlightSpecies[d["Species"]] =
+        highlightSpecies[d["Species"]] || brushed;
 
-	const X_SCALE3 = d3.scaleLinear();
-	const Y_SCALE3 = d3.scaleLinear();
+      return brushed;
+    });
+    Object.entries(highlightSpecies).forEach(([k, brushed]) => {
+      if (brushed) {
+        d3.select(`#bar-${k}`).attr("class", "selected");
+      } else {
+        d3.select(`#bar-${k}`).attr("class", null);
+      }
+    });
+  };
+  // A function that return TRUE or FALSE according if a dot is in the selection or not
+  function isBrushed(brush_coords, cx, cy) {
+    let x0 = brush_coords[0][0];
+    let x1 = brush_coords[1][0];
+    let y0 = brush_coords[0][1];
+    let y1 = brush_coords[1][1];
+    return x0 <= cx && cx <= x1 && y0 <= cy && cy <= y1; // This return TRUE or FALSE depending on if the points is in the selected area
+  };
+	
 	let selectedPoints;
 
 	function brushed(event) {
-  if (event.selection) {
-    // Get the brush selection coordinates
-    const [[x0, y0], [x1, y1]] = event.selection;
-    
-    // Get the selected points from the second scatter plot
-    const correspondingPoints1 = FRAME2.selectAll("circle")
-      .filter(d => {
-        const x = X_SCALE2(d.Sepal_Width) + MARGINS.left;
-        const y = Y_SCALE2(d.Petal_Width) + MARGINS.top;
-        return x0 <= x && x <= x1 && y0 <= y && y <= y1;
-      });
-    
-    // Get the corresponding points from the first scatter plot
-     const correspondingPoints2 = FRAME1.selectAll("circle")
-      .filter(d => {
-        const x = X_SCALE(d.Sepal_Length) + MARGINS.left;
-        const y = Y_SCALE(d.Petal_Length) + MARGINS.top;
-        return x0 <= x && x <= x1 && y0 <= y && y <= y1;
-      });
-      
-    // Combine the selected points from both scatter plots
-    const selectedPoints = correspondingPoints1.merge(correspondingPoints2);
-    const selectedPoints2 = correspondingPoints2.merge(correspondingPoints1);
-
-    // Highlight the selected points
-    selectedPoints.attr("fill-opacity", 0.8).attr("stroke", "orange").attr("stroke-width", 2);
-    selectedPoints2.attr("fill-opacity", 0.8).attr("stroke", "orange").attr("stroke-width", 2);
-    
-    // Get the corresponding bars from the bar chart
-    const correspondingBars = FRAME3.selectAll("rect")
-      .filter(d => selectedPoints.filter(p => p.Species === d.species).size() > 0);
-      
-    // Highlight the corresponding bars
-    correspondingBars.attr("fill-opacity", 1).attr("stroke", "orange").attr("stroke-width", 2);
-  } else {
-    // Remove the highlighting when the brush is cleared
-    FRAME1.selectAll("circle").attr("fill-opacity", 0.5).attr("stroke", "none");
-    FRAME2.selectAll("circle").attr("fill-opacity", 0.5).attr("stroke", "none");
-    FRAME3.selectAll("rect").attr("fill-opacity", 0.5).attr("stroke", "none");
-    selectedPoints.attr("fill-opacity", 0.5).attr("stroke", "none");
-    selectedPoints2.attr("fill-opacity", 0.5).attr("stroke", "none");
-  };
+  
 };
 	
 	});
@@ -223,11 +222,13 @@ const bars = FRAME3.selectAll("rect")
   .data(data)
   .enter()
   .append("rect")
+  .attr("class", "bar")
   .attr("x", d => X_SCALE(d.species) + MARGINS.left)
   .attr("y", d => Y_SCALE(d.count) + MARGINS.top)
   .attr("width", X_SCALE.bandwidth())
   .attr("height", d => VIS_HEIGHT - Y_SCALE(d.count))
   .attr("fill-opacity", 0.5)
+  .attr("id", (d) => `bar-${d.species}`)
   .attr("fill", d => colorScale(d.species));
 
 const xAxis = d3.axisBottom(X_SCALE);
