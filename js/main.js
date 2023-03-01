@@ -51,12 +51,14 @@ d3.csv("data/iris.csv").then((data) => {
 						.domain(data.map(d => d.Species))
 						.range(["aquamarine", "lightsalmon", "lightsteelblue"]);
 
-	
+	const brush = d3.brush()
+  .extent([[MARGINS.left, MARGINS.top], [MARGINS.left + VIS_WIDTH, MARGINS.top + VIS_HEIGHT]])
+  .on("brush end", brushed);
 
 
 	// plotting the circles onto the viz
 
-	points1 = FRAME1.selectAll("circle")
+	FRAME1.selectAll("circle")
 			.data(data)
 			.enter()
 			.append("circle")
@@ -102,7 +104,7 @@ d3.csv("data/iris.csv").then((data) => {
 						.range([VIS_HEIGHT, 0]);
 
 
-	points2 = FRAME2.selectAll("circle")
+	FRAME2.selectAll("circle")
 			.data(data)
 			.enter()
 			.append("circle")
@@ -136,86 +138,118 @@ d3.csv("data/iris.csv").then((data) => {
 			.attr("font-size", "14px")
 			.attr("font-family", "Arial");
 
-	FRAME2.call(d3.brush()
-                        .extent([[0,0], [FRAME_WIDTH, FRAME_HEIGHT]])
-                        .on("start brush", updateChart))
-                        .on("end", () => {
-                        });
+	FRAME2.append("g")
+  .attr("class", "brush")
+  .call(brush);
 
-        function updateChart(event) {
-			    	let extent = event.selection;
 
-			    	points1.classed("selected", function(d){ return isBrushed(extent, X_SCALE(d.Sepal_Length) + MARGINS.left, Y_SCALE(d.Petal_Length) + MARGINS.top)  } )
-			    	points2.classed("selected", function(d){ return isBrushed(extent, X_SCALE(d.Sepal_Length) + MARGINS.left, Y_SCALE(d.Petal_Length) + MARGINS.top)  } )
-			    	bars.classed("selected", function(d){ return isBrushed(extent, X_SCALE3(d.species) + MARGINS.left, Y_SCALE3(d.count) + MARGINS.top)  } )
 
-				};
-        
-        function isBrushed(brush_coords, cx, cy) {
-            var x0 = brush_coords[0][0],
-                x1 = brush_coords[1][0],
-                y0 = brush_coords[0][1],
-                y1 = brush_coords[1][1];
-            return x0 <= cx && cx <= x1 && y0 <= cy && cy <= y1;    
-        };
+	const X_SCALE3 = d3.scaleLinear();
+	const Y_SCALE3 = d3.scaleLinear();
+	let selectedPoints;
 
+	function brushed(event) {
+  if (event.selection) {
+    // Get the brush selection coordinates
+    const [[x0, y0], [x1, y1]] = event.selection;
+    
+    // Get the selected points from the second scatter plot
+    const correspondingPoints1 = FRAME2.selectAll("circle")
+      .filter(d => {
+        const x = X_SCALE2(d.Sepal_Width) + MARGINS.left;
+        const y = Y_SCALE2(d.Petal_Width) + MARGINS.top;
+        return x0 <= x && x <= x1 && y0 <= y && y <= y1;
+      });
+    
+    // Get the corresponding points from the first scatter plot
+     const correspondingPoints2 = FRAME1.selectAll("circle")
+      .filter(d => {
+        const x = X_SCALE(d.Sepal_Length) + MARGINS.left;
+        const y = Y_SCALE(d.Petal_Length) + MARGINS.top;
+        return x0 <= x && x <= x1 && y0 <= y && y <= y1;
+      });
+      
+    // Combine the selected points from both scatter plots
+    const selectedPoints = correspondingPoints1.merge(correspondingPoints2);
+    const selectedPoints2 = correspondingPoints2.merge(correspondingPoints1);
+
+
+    // Highlight the selected points
+    selectedPoints.attr("fill-opacity", 0.8).attr("stroke", "orange").attr("stroke-width", 2);
+    selectedPoints2.attr("fill-opacity", 0.8).attr("stroke", "orange").attr("stroke-width", 2);
+    
+    // Get the corresponding bars from the bar chart
+    const correspondingBars = FRAME3.selectAll("rect")
+  		.filter(d => selectedPoints.filter(p => p.Species === d.species).size() > 0);
+      
+    // Highlight the corresponding bars
+    correspondingBars.attr("fill-opacity", 1).attr("stroke", "orange").attr("stroke-width", 2);
+  } else {
+    // Remove the highlighting when the brush is cleared
+    FRAME1.selectAll("circle").attr("fill-opacity", 0.5).attr("stroke", "none");
+    FRAME2.selectAll("circle").attr("fill-opacity", 0.5).attr("stroke", "none");
+    FRAME3.selectAll("rect").attr("fill-opacity", 0.5).attr("stroke", "none");
+  }
+}
 	
+	});
 
-	// creating the bar chart
 
-	const bar_data = [
+
+
+
+const data = [
   {species: "virginica", count: 50},
   {species: "versicolor", count: 50},
   {species: "setosa", count: 50},
 ];
 
-const X_SCALE3 = d3.scaleBand()
-  .domain(bar_data.map(d => d.species))
+const X_SCALE = d3.scaleBand()
+  .domain(data.map(d => d.species))
   .range([0, VIS_WIDTH])
   .padding(0.2);
 
-const Y_SCALE3 = d3.scaleLinear()
-  .domain([0, d3.max(bar_data, d => d.count) + 10])
+const Y_SCALE = d3.scaleLinear()
+  .domain([0, d3.max(data, d => d.count) + 10])
   .range([VIS_HEIGHT, 0]);
 
- const bars = FRAME3.selectAll("rect")
-  .data(bar_data)
+const colorScale = d3.scaleOrdinal()
+  .domain(data.map(d => d.species))
+  .range(["lightsteelblue", "lightsalmon", "aquamarine"]);
+
+
+const bars = FRAME3.selectAll("rect")
+  .data(data)
   .enter()
   .append("rect")
-  .attr("x", d => X_SCALE3(d.species) + MARGINS.left)
-  .attr("y", d => Y_SCALE3(d.count) + MARGINS.top)
-  .attr("width", X_SCALE3.bandwidth())
-  .attr("height", d => VIS_HEIGHT - Y_SCALE3(d.count))
+  .attr("x", d => X_SCALE(d.species) + MARGINS.left)
+  .attr("y", d => Y_SCALE(d.count) + MARGINS.top)
+  .attr("width", X_SCALE.bandwidth())
+  .attr("height", d => VIS_HEIGHT - Y_SCALE(d.count))
   .attr("fill-opacity", 0.5)
   .attr("fill", d => colorScale(d.species));
 
-	const xAxis = d3.axisBottom(X_SCALE3);
+const xAxis = d3.axisBottom(X_SCALE);
 
-	const yAxis = d3.axisLeft(Y_SCALE3);
+const yAxis = d3.axisLeft(Y_SCALE);
 
-	FRAME3.append("g")
+FRAME3.append("g")
 			.attr("transform", "translate(" + MARGINS.left + "," + (VIS_HEIGHT + MARGINS.top) + ")")
 			.call(xAxis)
 			.attr("font-size", "14px")
 			.attr("font-family", "Arial");
 
-	FRAME3.append("g")
+FRAME3.append("g")
 		.attr("transform", "translate(" + MARGINS.left + "," + MARGINS.top + ")")
 		.call(yAxis)
 		.attr("font-size", "14px")
 		.attr("font-family", "Arial");
 
-	//adding a title
-	FRAME3.append("text")
+//adding a title
+FRAME3.append("text")
   .attr("x", VIS_WIDTH / 2 + MARGINS.left)
   .attr("y", MARGINS.top / 2)
   .attr("text-anchor", "middle")
   .style("font-size", "20px")
   .style("font-weight", "bold")
   .text("Counts of Species");
-
-
- 
-	
-
-});
