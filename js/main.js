@@ -56,7 +56,7 @@ d3.csv("data/iris.csv").then((data) => {
 
 	// plotting the circles onto the viz
 
-	FRAME1.selectAll("circle")
+	points1 = FRAME1.selectAll("circle")
 			.data(data)
 			.enter()
 			.append("circle")
@@ -102,7 +102,7 @@ d3.csv("data/iris.csv").then((data) => {
 						.range([VIS_HEIGHT, 0]);
 
 
-	FRAME2.selectAll("circle")
+	points2 = FRAME2.selectAll("circle")
 			.data(data)
 			.enter()
 			.append("circle")
@@ -137,8 +137,27 @@ d3.csv("data/iris.csv").then((data) => {
 			.attr("font-family", "Arial");
 
 	FRAME2.call(d3.brush()
-  .extent([[0, 0], [VIS_WIDTH, VIS_HEIGHT]])
-  .on("start brush", updateChart));
+                        .extent([[0,0], [FRAME_WIDTH, FRAME_HEIGHT]])
+                        .on("start brush", updateChart))
+                        .on("end", () => {
+                        });
+
+        function updateChart(event) {
+			    	let extent = event.selection;
+
+			    	points1.classed("selected", function(d){ return isBrushed(extent, X_SCALE(d.Sepal_Length) + MARGINS.left, Y_SCALE(d.Petal_Length) + MARGINS.top)  } )
+			    	points2.classed("selected", function(d){ return isBrushed(extent, X_SCALE(d.Sepal_Length) + MARGINS.left, Y_SCALE(d.Petal_Length) + MARGINS.top)  } )
+			    	bars.classed("selected", function(d){ return isBrushed(extent, X_SCALE3(d.species) + MARGINS.left, Y_SCALE3(d.count) + MARGINS.top)  } )
+
+				};
+        
+        function isBrushed(brush_coords, cx, cy) {
+            var x0 = brush_coords[0][0],
+                x1 = brush_coords[1][0],
+                y0 = brush_coords[0][1],
+                y1 = brush_coords[1][1];
+            return x0 <= cx && cx <= x1 && y0 <= cy && cy <= y1;    
+        };
 
 	
 
@@ -197,51 +216,6 @@ const Y_SCALE3 = d3.scaleLinear()
 
 
  
-  function updateChart(event) {
-  // get the extent of the brush
-  const extent = event.selection;
-
-  // if the brush is cleared, unhighlight all elements and exit the function
-  if (!extent) {
-    FRAME1.selectAll(".point")
-      .classed("highlight", false);
-    FRAME2.selectAll(".point")
-      .classed("brushed", false);
-    FRAME3.selectAll("rect")
-      .classed("highlight", false);
-    return;
-  }
-
-  // get the brushed data from vis2
-  const brushedData = [];
-  FRAME2.selectAll(".point").each(function(d) {
-    const x = X_SCALE2(d.Sepal_Width) + MARGINS.left;
-    const y = Y_SCALE2(d.Petal_Width) + MARGINS.bottom;
-    if (x >= extent[0][0] && x <= extent[1][0] && y >= extent[0][1] && y <= extent[1][1]) {
-      brushedData.push(d);
-    }
-  });
-
-  // highlight the corresponding points and bars
-  FRAME1.selectAll(".point")
-    .classed("highlight", function(d) {
-      return brushedData.some(function(e) {
-        return d === e;
-      });
-    });
-  FRAME2.selectAll(".point")
-    .classed("brushed", function(d) {
-      return brushedData.some(function(e) {
-        return d === e;
-      });
-    });
-  FRAME3.selectAll("rect")
-    .classed("highlight", function(d) {
-      return brushedData.some(function(e) {
-        return d.Species === e.Species;
-      });
-    });
-};
 	
 
 });
