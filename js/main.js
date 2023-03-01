@@ -173,14 +173,13 @@ d3.csv("data/iris.csv").then((data) => {
     const selectedPoints = correspondingPoints1.merge(correspondingPoints2);
     const selectedPoints2 = correspondingPoints2.merge(correspondingPoints1);
 
-
     // Highlight the selected points
     selectedPoints.attr("fill-opacity", 0.8).attr("stroke", "orange").attr("stroke-width", 2);
     selectedPoints2.attr("fill-opacity", 0.8).attr("stroke", "orange").attr("stroke-width", 2);
     
     // Get the corresponding bars from the bar chart
     const correspondingBars = FRAME3.selectAll("rect")
-  		.filter(d => selectedPoints.filter(p => p.Species === d.species).size() > 0);
+      .filter(d => selectedPoints.filter(p => p.Species === d.species).size() > 0);
       
     // Highlight the corresponding bars
     correspondingBars.attr("fill-opacity", 1).attr("stroke", "orange").attr("stroke-width", 2);
@@ -189,14 +188,16 @@ d3.csv("data/iris.csv").then((data) => {
     FRAME1.selectAll("circle").attr("fill-opacity", 0.5).attr("stroke", "none");
     FRAME2.selectAll("circle").attr("fill-opacity", 0.5).attr("stroke", "none");
     FRAME3.selectAll("rect").attr("fill-opacity", 0.5).attr("stroke", "none");
-  }
-}
+    selectedPoints.attr("fill-opacity", 0.5).attr("stroke", "none");
+    selectedPoints2.attr("fill-opacity", 0.5).attr("stroke", "none");
+  };
+};
 	
 	});
 
 
 
-
+// creating bar chart
 
 const data = [
   {species: "virginica", count: 50},
