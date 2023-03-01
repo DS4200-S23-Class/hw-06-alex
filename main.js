@@ -51,9 +51,7 @@ d3.csv("data/iris.csv").then((data) => {
 						.domain(data.map(d => d.Species))
 						.range(["aquamarine", "lightsalmon", "lightsteelblue"]);
 
-	const brush = d3.brush()
-  .extent([[MARGINS.left, MARGINS.top], [MARGINS.left + VIS_WIDTH, MARGINS.top + VIS_HEIGHT]])
-  .on("brush end", brushed);
+	
 
 
 	// plotting the circles onto the viz
@@ -138,103 +136,112 @@ d3.csv("data/iris.csv").then((data) => {
 			.attr("font-size", "14px")
 			.attr("font-family", "Arial");
 
-	FRAME2.append("g")
-  .attr("class", "brush")
-  .call(brush);
+	FRAME2.call(d3.brush()
+  .extent([[0, 0], [VIS_WIDTH, VIS_HEIGHT]])
+  .on("start brush", updateChart));
 
+	
 
+	// creating the bar chart
 
-	const X_SCALE3 = d3.scaleLinear();
-	const Y_SCALE3 = d3.scaleLinear();
-	let selectedPoints;
-
-	function brushed(event) {
-	  if (event.selection) {
-	    // Get the brush selection coordinates
-	    const [[x0, y0], [x1, y1]] = event.selection;
-	    
-	    // Get the selected point from the second scatter plot
-	    const selectedPoint2 = FRAME2.selectAll("circle")
-	      .filter(d => {
-	        const x = X_SCALE2(d.Sepal_Width) + MARGINS.left;
-	        const y = Y_SCALE2(d.Petal_Width) + MARGINS.top;
-	        return x >= x0 && x <= x1 && y >= y0 && y <= y1;
-	      });
-	      
-	    // Get the corresponding point from the first scatter plot
-	    const correspondingPoint1 = FRAME1.selectAll("circle")
-	      .filter(d => d.Sepal_Width == selectedPoint2.data()[0].Sepal_Width && d.Petal_Width == selectedPoint2.data()[0].Petal_Width);
-	    
-	    // Highlight the selected and corresponding points
-	    selectedPoints.attr("stroke", "orange").attr("stroke-width", 2);
-	    correspondingPoint1.attr("fill-opacity", 0.8).attr("stroke", "orange").attr("stroke-width", 2);
-	    
-	    // Get the corresponding bars from the bar chart
-	    const correspondingBars = FRAME3.selectAll("rect")
-	      .filter(d => selectedPoints.filter(p => p.Species === d.species).size() > 0);
-	      
-	    // Highlight the corresponding bars
-	    correspondingBars.attr("stroke", "orange").attr("stroke-width", 2);
-	  } else {
-	    // Remove the highlighting when the brush is cleared
-	    FRAME1.selectAll("circle").attr("fill-opacity", 0.5).attr("stroke", "none");
-	    FRAME2.selectAll("circle").attr("stroke", "none");
-	    FRAME3.selectAll("rect").attr("stroke", "none");
-  	}
-	};
-
-
-
-
-
-const bar_data = [
+	const bar_data = [
   {species: "virginica", count: 50},
   {species: "versicolor", count: 50},
   {species: "setosa", count: 50},
 ];
 
-const X_SCALE_BAR = d3.scaleBand()
+const X_SCALE3 = d3.scaleBand()
   .domain(bar_data.map(d => d.species))
   .range([0, VIS_WIDTH])
   .padding(0.2);
 
-const Y_SCALE_BAR = d3.scaleLinear()
+const Y_SCALE3 = d3.scaleLinear()
   .domain([0, d3.max(bar_data, d => d.count) + 10])
   .range([VIS_HEIGHT, 0]);
 
-
-const bars = FRAME3.selectAll("rect")
+ const bars = FRAME3.selectAll("rect")
   .data(bar_data)
   .enter()
   .append("rect")
-  .attr("x", d => X_SCALE_BAR(d.species) + MARGINS.left)
-  .attr("y", d => Y_SCALE_BAR(d.count) + MARGINS.top)
-  .attr("width", X_SCALE_BAR.bandwidth())
-  .attr("height", d => VIS_HEIGHT - Y_SCALE_BAR(d.count))
+  .attr("x", d => X_SCALE3(d.species) + MARGINS.left)
+  .attr("y", d => Y_SCALE3(d.count) + MARGINS.top)
+  .attr("width", X_SCALE3.bandwidth())
+  .attr("height", d => VIS_HEIGHT - Y_SCALE3(d.count))
   .attr("fill-opacity", 0.5)
   .attr("fill", d => colorScale(d.species));
 
-const xAxis = d3.axisBottom(X_SCALE_BAR);
+	const xAxis = d3.axisBottom(X_SCALE3);
 
-const yAxis = d3.axisLeft(Y_SCALE_BAR);
+	const yAxis = d3.axisLeft(Y_SCALE3);
 
-FRAME3.append("g")
+	FRAME3.append("g")
 			.attr("transform", "translate(" + MARGINS.left + "," + (VIS_HEIGHT + MARGINS.top) + ")")
 			.call(xAxis)
 			.attr("font-size", "14px")
 			.attr("font-family", "Arial");
 
-FRAME3.append("g")
+	FRAME3.append("g")
 		.attr("transform", "translate(" + MARGINS.left + "," + MARGINS.top + ")")
 		.call(yAxis)
 		.attr("font-size", "14px")
 		.attr("font-family", "Arial");
 
-//adding a title
-FRAME3.append("text")
+	//adding a title
+	FRAME3.append("text")
   .attr("x", VIS_WIDTH / 2 + MARGINS.left)
   .attr("y", MARGINS.top / 2)
   .attr("text-anchor", "middle")
   .style("font-size", "20px")
   .style("font-weight", "bold")
   .text("Counts of Species");
+
+
+ 
+  function updateChart(event) {
+  // get the extent of the brush
+  const extent = event.selection;
+
+  // if the brush is cleared, unhighlight all elements and exit the function
+  if (!extent) {
+    FRAME1.selectAll(".point")
+      .classed("highlight", false);
+    FRAME2.selectAll(".point")
+      .classed("brushed", false);
+    FRAME3.selectAll("rect")
+      .classed("highlight", false);
+    return;
+  }
+
+  // get the brushed data from vis2
+  const brushedData = [];
+  FRAME2.selectAll(".point").each(function(d) {
+    const x = X_SCALE2(d.Sepal_Width) + MARGINS.left;
+    const y = Y_SCALE2(d.Petal_Width) + MARGINS.bottom;
+    if (x >= extent[0][0] && x <= extent[1][0] && y >= extent[0][1] && y <= extent[1][1]) {
+      brushedData.push(d);
+    }
+  });
+
+  // highlight the corresponding points and bars
+  FRAME1.selectAll(".point")
+    .classed("highlight", function(d) {
+      return brushedData.some(function(e) {
+        return d === e;
+      });
+    });
+  FRAME2.selectAll(".point")
+    .classed("brushed", function(d) {
+      return brushedData.some(function(e) {
+        return d === e;
+      });
+    });
+  FRAME3.selectAll("rect")
+    .classed("highlight", function(d) {
+      return brushedData.some(function(e) {
+        return d.Species === e.Species;
+      });
+    });
+};
+	
+
+});

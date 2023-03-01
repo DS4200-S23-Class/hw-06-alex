@@ -31,3 +31,8 @@ h2 {
 	text-align: center;
 }
 
+.selected {
+  opacity: 1 !important;
+  stroke: black;
+  stroke-width: 2px;
+}
