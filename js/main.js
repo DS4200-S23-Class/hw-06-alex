@@ -105,7 +105,7 @@ d3.csv("data/iris.csv").then((data) => {
 						.domain([0, Math.ceil(max_petal_width)])
 						.range([VIS_HEIGHT, 0]);
 
-
+	// declaring a circles variable here for the brushing later on					
 	const circles = FRAME2.selectAll("circle")
 			.data(data)
 			.enter()
@@ -143,12 +143,12 @@ d3.csv("data/iris.csv").then((data) => {
 	FRAME2.select("text")
   .attr("fill", "black");
 
-	FRAME2.call(d3.brush() // Add the brush feature using the d3.brush function
-      					.extent([[MARGINS.left, MARGINS.top],
-        									[FRAME_WIDTH - MARGINS.left, FRAME_HEIGHT - MARGINS.top],]) // initialise the brush area: start at 0,0 and finishes at width,height: it means I select the whole graph area
+  // calling the brushing onto the second viz using d3.brush
+	FRAME2.call(d3.brush() 
+      					.extent([[MARGINS.left, MARGINS.top],[FRAME_WIDTH - MARGINS.left, FRAME_HEIGHT - MARGINS.top],]) 
       					.on("start brush", updateChart));
 
-
+	// creating the brushing and updateChart functions to work on all three visualizations
 	let extent = undefined;
   function updateChart(event) {
     extent = event.selection;
@@ -177,7 +177,7 @@ d3.csv("data/iris.csv").then((data) => {
       }
     });
   };
-  // A function that return TRUE or FALSE according if a dot is in the selection or not
+
   function isBrushed(brush_coords, cx, cy) {
     let x0 = brush_coords[0][0];
     let x1 = brush_coords[1][0];
